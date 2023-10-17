@@ -12,7 +12,7 @@ import Expression from "./Expression/Expression";
 function App() {
   const [stack, setStack] = useState([]);
   const [queues, setQueues] = useState([]);
-  const [expression, setExpression] = useState("");
+  const [expression, setExpression] = useState([]);
   const [stateHistory, setStateHistory] = useState([]);
   const [result, setResult] = useState(0);
   const operators = ["*", ".", "-", "+", "/"];
@@ -20,21 +20,20 @@ function App() {
   const lastInputType = useRef("number");
   const [history, setHistory] = useState([]);
 
+  ////////////////////////////////////////////////V1//////////////////////////////////////////////////////////////////////
+  // Use a useEffect hook to call calcResult after the expression state updates.
   useEffect(() => {
-    setHistory([...history, {stack}]);
+    // Calculate the result only if the stack has at least 2 characters
+    console.log("useeffect of state called stack is " + JSON.stringify(stack));
+    if (
+      stack.length >= 2 &&
+      ((lastInputType.current == "number" &&
+        expression[expression.length - 1] != "-") ||
+        expression[expression.length - 1] == ")")
+    ) {
+      calcResult();
+    }
   }, [stack]);
-
-  useEffect(() => {
-
-  }, [queues]);
-
-  useEffect(() => {
-
-  }, [expression]);
-
-  useEffect(() => {
-
-  }, [lastInputType]);
 
   const handleOpenPar = () => {
     const digitPattern = /^\d$/;
@@ -56,8 +55,8 @@ function App() {
       return;
     }
     //move elements between par-  from queue to stack
-    let newQueues = queues;
-    let newStack = stack;
+    let newQueues = [...queues];
+    let newStack = [...stack];
     while (newQueues[newQueues.length - 1] != "(") {
       newStack = [...newStack, newQueues[newQueues.length - 1]];
       newQueues = newQueues.slice(0, -1);
@@ -71,16 +70,21 @@ function App() {
 
   const handleNumberClick = (operand) => {
     //first userInput
-    if (stack.length == 0) setStack([operand]);
+    if (stack.length == 0) {
+      setStack([operand]);
+    }
     //last userInput is a number - concatenate the next number
     else if (lastInputType.current == "number") {
+      console.log("if lastInputType.current == number");
       let stackCopy = stack;
       const lastElement = stackCopy.pop();
+
       setStack([...stackCopy, lastElement + operand]);
       //last user input is operator - insert operand to stack as a new element
     } else {
       //add multipication in case that last input is closing parentheses
       if (expression[expression.length - 1] == ")") setQueues([...queues, "*"]);
+      console.log("lastInput is operator stack is: " + JSON.stringify(stack));
       setStack([...stack, operand]);
     }
     setExpression([...expression, operand]);
@@ -93,69 +97,51 @@ function App() {
       return;
     }
     const preOpearor = queues[queues.length - 1];
-    let tempQueues = queues;
-    // no pre operator. insert new operator to queue
+    const operatorPattern = /^[+\-*/]$/;
+    // no pre operator. insert new operator to queue. except (-) that can be unary and should go to the stack
     if (!preOpearor && newOperator != "-") {
       setQueues([...queues, newOperator]);
-    } else {
-      const operatorPattern = /^[+\-*/]$/;
-      switch (newOperator) {
-        case "-":
-          //unary(-)
-          if (
-            operatorPattern.test(expression[expression.length - 1]) ||
-            stack.length == 0
-          ) {
-            lastInputType.current = "number";
-            setStack([...stack, newOperator]);
-            setExpression([...expression, newOperator]);
-            return;
-            //binary (-)
-          } else {
-            switch (preOpearor) {
-              case "(":
-                setQueues([...queues, newOperator]);
-                break;
-              default:
-                console.log("C");
-                if (preOpearor) setStack([...stack, preOpearor]);
-                setQueues([...tempQueues.slice(0, -1), newOperator]);
-                break;
-            }
-          }
-          break;
-        case "+":
-          switch (preOpearor) {
-            case "(":
-              setQueues([...queues, newOperator]);
-              break;
 
-            default:
-              setStack([...stack, preOpearor]);
-              setQueues([...tempQueues.slice(0, -1), newOperator]);
-              break;
-          }
-          break;
-        case "*":
-        case "/":
-          switch (preOpearor) {
-            case "(":
-            case "+":
-            case "-":
-              setQueues([...queues, newOperator]);
-              break;
-            default:
-              setStack([...stack, preOpearor]);
-              setQueues([...tempQueues.slice(0, -1), newOperator]);
-              break;
-          }
-          break;
+      //preOperator.s exists
+      //unary(-)
+      //new operator is minus and last input is an operator or stack empty (-) is unary
+    } else if (
+      newOperator == "-" &&
+      (operatorPattern.test(expression[expression.length - 1]) ||
+        stack.length == 0)
+    ) {
+      console.log("unary minus");
+      lastInputType.current = "number";
+      setStack([...stack, newOperator]);
+      setExpression([...expression, newOperator]);
+      return;
+      //preOperator.s exists
+      //not unary(-)
+    } else {
+      let higherOperators = [];
+      if (["+", "-"].includes(newOperator))
+        higherOperators = ["+", "-", "*", "/"];
+      else higherOperators = ["*", "/"];
+      let asyncQueue = [...queues];
+      let asyncStack = [...stack];
+
+      //move operators with higer or equal precedence to stack
+      while (
+        higherOperators.includes(asyncQueue[asyncQueue.length - 1]) &&
+        asyncQueue[asyncQueue.length - 1] != "("
+      ) {
+        asyncStack = [...asyncStack, asyncQueue.pop()];
+        console.log("asyncStack " + asyncStack);
+        console.log("asyncQueue " + asyncQueue);
       }
+      //put the new operator in queue
+      setStack([...asyncStack]);
+      setQueues([...asyncQueue, newOperator]);
     }
+
     setExpression([...expression, newOperator]);
     lastInputType.current = "operator";
   };
-
 
   const applyInnerCalc = (operator, operand1, operand2) => {
     switch (operator) {
@@ -182,9 +168,12 @@ function App() {
   };
 
   const calcResult = () => {
+    console.log("calcResult called");
+    console.log("0 " + JSON.stringify(stack));
     try {
-      let newStack = stack;
-      let newQueues = queues;
+      //let newStack = stack;
+      let newStack = [...stack];
+      let newQueues = [...queues];
       let operator;
       let operand1;
       let operand2;
@@ -195,8 +184,9 @@ function App() {
       while (newQueues.length > 0) {
         newStack.push(newQueues.pop());
       }
-      console.log("newStack : " + JSON.stringify(newStack));
-      console.log("newQueues : " + JSON.stringify(newQueues));
+      console.log("1 " + JSON.stringify(stack));
+      // console.log("newStack : " + JSON.stringify(newStack));
+      // console.log("newQueues : " + JSON.stringify(newQueues));
 
       //as long as newStack has more then one character ( the final result ) keep calculate
       while (newStack.length > 1) {
@@ -208,17 +198,24 @@ function App() {
         operand2 = Number(newStack[operatorIndex - 1]);
 
         //calc inner result
+        console.log(
+          "operator " +
+            operator +
+            " operand1 " +
+            operand1 +
+            " operand2" +
+            operand2
+        );
         innerCalcResult = applyInnerCalc(operator, operand1, operand2);
 
         //replace the three operator and operands with the innerCalcResult
         newStack.splice(operatorIndex - 2, 3, innerCalcResult.toString());
-        console.log("newStack end " + JSON.stringify(newStack));
       }
-
+      console.log("2 " + JSON.stringify(stack));
       setResult(newStack[0]);
-      setStack([newStack[0]]);
-      setExpression(newStack[0].toString());
-      setQueues([]);
+      //setStack([newStack[0]]);
+      //setExpression(newStack[0].toString());
+      //setQueues([]);
     } catch (err) {
       console.log(err);
     }
@@ -238,7 +235,9 @@ function App() {
                 key={index}
                 className={`item-${el}`}
                 value={el}
-                onClick={(event) => {handleNumberClick(event.target.value);calcResult()}}
+                onClick={(event) => {
+                  handleNumberClick(event.target.value);
+                }}
               >
                 {el}
               </button>
@@ -266,7 +265,9 @@ function App() {
                 key={index}
                 className={`item-${el}`}
                 value={el}
-                onClick={(event) => {handleOperatorClick(event.target.value);calcResult()}}
+                onClick={(event) => {
+                  handleOperatorClick(event.target.value);
+                }}
               >
                 {el}
               </button>
