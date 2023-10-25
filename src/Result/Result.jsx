@@ -1,8 +1,8 @@
 
 const Result = ({result}) => {
     return (
-        <div className="Result">
-            Result is : {result} <br />
+        <div style={{paddingLeft: "6px",fontSize: "xx-large"}} className="Result">
+            = {result} <br />
         </div>
     );
 }

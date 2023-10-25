@@ -1,5 +1,6 @@
 .App {
   text-align: center;
+  background-color: #202020;
 }
 
 .App-logo {
@@ -24,8 +25,20 @@
   color: white;
 }
 
+
+
 .App-link {
   color: #61dafb;
+}
+
+
+button{
+  background-color: #3b3b3b;
+  color: white;
+}
+
+button:hover{
+  background-color: #202020;
 }
 
 @keyframes App-logo-spin {
@@ -105,23 +118,24 @@
   grid-column: 3;
   background-color: red;
 }
-[class="unary-minus"]{
-  grid-row: 5;
-  grid-column: 5;
-}
+
 .item--{
   grid-row: 4;
-  grid-column: 5;
+  grid-column: 4;
 }
 [class="item-*"]{
   grid-row: 3;
-  grid-column: 5;
+  grid-column: 4;
 }
 [class="item-/"]{
   grid-row: 1;
   grid-column: 4;
 }
+[class="item-+"]{
+  grid-row: 2;
+  grid-column: 4;
+}
 [class="item-="]{
-  grid-row : 4 / span 2;
+  grid-row : 5;
   grid-column: 4;
 }

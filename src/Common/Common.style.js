@@ -21,7 +21,7 @@ const RowContainer = styled("div")({
 
 const GridContainr = styled("div")({
         display: "grid",
-        gridTemplateColumns:  "repeat(5, 100px)",
+        gridTemplateColumns:  "repeat(4, 100px)",
         gridTemplateRows:  "repeat(5, 100px)",
         gap: "5px",
         gridAutoRows: "100px",

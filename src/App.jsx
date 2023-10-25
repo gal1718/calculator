@@ -15,9 +15,28 @@ function App() {
   const [expression, setExpression] = useState([]);
   const [stateHistory, setStateHistory] = useState([]);
   const [result, setResult] = useState(0);
-  const operators = ["*", ".", "-", "+", "/"];
+  const operators = ["*", "-", "+", "/"];
   const numbersArr = new Array(10).fill().map((_, index) => index);
   const lastInputType = useRef("number");
+  const [isDELClicked, setIsDELClicked] = useState(false);
+
+  useEffect(() => {
+    if (!isDELClicked) {
+      console.log("new state saved to history");
+      setStateHistory((prevHistory) => [
+        ...prevHistory,
+        {
+          stack,
+          queues,
+          expression,
+          result,
+          lastInputType: lastInputType.current,
+        },
+      ]);
+    } else {
+      setIsDELClicked(false); // Reset the flag
+    }
+  }, [expression]);
 
   // Use a useEffect hook to call calcResult after the stack updated.
   useEffect(() => {
@@ -27,11 +46,47 @@ function App() {
         expression[expression.length - 1] != "-") ||
         expression[expression.length - 1] == ")")
     ) {
-      console.log("calcres from useaffect called");
+      console.log("calcres useaffect called");
       calcResult();
     }
   }, [stack]);
-  ////////////////////////////////////////////////////////////////////////////////
+
+  const handleDotClick = () => {
+    //last input is closing parentheses
+    if(expression[expression.length - 1] == ")"){
+      const updatedArrs = getReorderStackAndQueue("*");
+      setQueues([...updatedArrs.syncQueue]);
+      setStack([...updatedArrs.syncStack, "0."]);
+      setExpression([...expression, "*","0","."]);
+    }
+    //last input is operator or none
+    else if (stack.length == 0 || lastInputType.current == "operator") {
+      setStack([...stack, "0."]);
+      setExpression([...expression, "0","."]);
+      //last input is a number - concate last number with the dot
+    } else {
+      let stackCopy = [...stack];
+      const lastElement = stackCopy.pop();
+      setStack([...stackCopy, lastElement + "."]);
+      setExpression([...expression, "."]);
+    }
+    lastInputType.current = "number";
+  };
+
+  const handleDELClick = () => {
+    let previousState;
+    if (stateHistory.length > 1) {
+      console.log("handledelClicked called");
+      previousState = stateHistory[stateHistory.length - 2];
+      setStateHistory(stateHistory.slice(0, -1));
+
+      setStack(previousState.stack);
+      setQueues(previousState.queues);
+      setExpression(previousState.expression);
+      setResult(previousState.result);
+      lastInputType.current = previousState.lastInputType;
+    }
+  };
 
   const handleEqualClick = () => {
     console.log("handleEqualClick called");
@@ -41,12 +96,15 @@ function App() {
     setExpression([strResult]);
   };
 
-  ///////////////////////////////////////////////////////////////////////////////
+
   const handleOpenPar = async () => {
     console.log("handleOpenPar called");
     const digitPattern = /^\d$/;
-    //if the last charecter is number add *
-    if (digitPattern.test(expression[expression.length - 1])) {
+    //if the last charecter is number or closing parenthesws add * before
+    if (
+      digitPattern.test(expression[expression.length - 1]) ||
+      expression[expression.length - 1] == ")"
+    ) {
       lastInputType.current = "operator";
       const updatedArrs = getReorderStackAndQueue("*");
       setQueues([...updatedArrs.syncQueue, "("]);
@@ -61,32 +119,33 @@ function App() {
 
   const getReorderStackAndQueue = (newOperator) => {
     console.log("reorderByPrecedence called");
-      console.log("new operator: " + newOperator)
-      let higherOperators = [];
-      if (["+", "-"].includes(newOperator))
-        higherOperators = ["+", "-", "*", "/"];
-      else higherOperators = ["*", "/"];
-      let syncQueue = [...queues];
-      let syncStack = [...stack];
-      console.log("syncStack before" + syncStack);
-      console.log("syncQueue before" + syncQueue);
-      //move operators with higer or equal precedence to stack
-      while (
-        higherOperators.includes(syncQueue[syncQueue.length - 1]) &&
-        syncQueue[syncQueue.length - 1] != "("
-      ) {
-        syncStack = [...syncStack, syncQueue.pop()];
-      }
-      syncQueue = [...syncQueue, newOperator];
-      console.log("syncStack " + syncStack);
-      console.log("syncQueue " + syncQueue);
-      const updatedArrs = {syncStack, syncQueue};
-      return updatedArrs;  
+    console.log("new operator: " + newOperator);
+    let higherOperators = [];
+    if (["+", "-"].includes(newOperator))
+      higherOperators = ["+", "-", "*", "/"];
+    else higherOperators = ["*", "/"];
+    let syncQueue = [...queues];
+    let syncStack = [...stack];
+    // console.log("syncStack before" + syncStack);
+    // console.log("syncQueue before" + syncQueue);
+    //move operators with higer or equal precedence to stack
+    while (
+      higherOperators.includes(syncQueue[syncQueue.length - 1]) &&
+      syncQueue[syncQueue.length - 1] != "("
+    ) {
+      syncStack = [...syncStack, syncQueue.pop()];
+    }
+    //after moving higher/equal precedence operators to stack - add the new operator to queue
+    syncQueue = [...syncQueue, newOperator];
+    // console.log("syncStack " + syncStack);
+    // console.log("syncQueue " + syncQueue);
+    const updatedArrs = { syncStack, syncQueue };
+    return updatedArrs;
   };
-  ///////////////////////////////////////////////////////////////////////////////////
+
   const handleClosePar = () => {
     console.log("handleClosePar called");
-    //check if queses include open parentesis
+    //check if queses include open parentesis//need to check the number of open and close par
     if (!queues.includes("(") || queues.length == 0) {
       alert("closing parentheses cannot comes without open Parenthesis");
       return;
@@ -104,29 +163,38 @@ function App() {
     setExpression([...expression, ")"]);
     lastInputType.current = "operator";
   };
-  //////////////////////////////////////////////////////////////////////////////////////////////////
+  
   const handleNumberClick = (operand) => {
-    console.log("handleNumberClick called");
+    console.log(
+      "handleNumberClick called last user input is : " + lastInputType.current
+    );
     //first userInput
     if (stack.length == 0) {
       setStack([operand]);
     }
-    //last userInput is a number - concatenate the next digit
+    //last userInput is a number - concatenate the new digit
     else if (lastInputType.current == "number") {
       let stackCopy = [...stack];
       const lastElement = stackCopy.pop();
       setStack([...stackCopy, lastElement + operand]);
       //last user input is operator - insert operand to stack as a new element
     } else {
+      console.log("2");
       //add multipication in case that last input is closing parentheses
-      if (expression[expression.length - 1] == ")") setQueues([...queues, "*"]);
+      if (expression[expression.length - 1] == ")") {
+        setQueues([...queues, "*"]);
+        setStack([...stack, operand]);
+        lastInputType.current = "number";
+        return;
+      }
       setStack([...stack, operand]);
     }
-    setExpression([...expression, operand]);
+    console.log("3");
     lastInputType.current = "number";
   };
   ////////////////////////////////////////////////////////////////////////////////////////////////////////
   const handleOperatorClick = (newOperator) => {
+    
     console.log("handleOperatorClick called");
     if (stack.length == 0 && newOperator != "-") {
       alert("expression cannot start with an operation");
@@ -145,10 +213,8 @@ function App() {
       (operatorPattern.test(expression[expression.length - 1]) ||
         stack.length == 0)
     ) {
-      console.log("unary minus");
       lastInputType.current = "number";
       setStack([...stack, newOperator]);
-      setExpression([...expression, newOperator]);
       return;
       //preOperator.s exists
       //not unary(-)
@@ -157,13 +223,11 @@ function App() {
       setQueues([...updatedArrs.syncQueue]);
       setStack([...updatedArrs.syncStack]);
     }
-
-    setExpression([...expression, newOperator]);
     lastInputType.current = "operator";
   };
+
   //////////////////////////////////////////////////////////////////////////////////////////////////////////
   const applyInnerCalc = (operator, operand1, operand2) => {
-    console.log("applyInnerCalc called");
     switch (operator) {
       case "+":
         return operand1 + operand2;
@@ -179,7 +243,6 @@ function App() {
   };
   /////////////////////////////////////////////////////////////////////////////////////////////////
   const findFirstOperatorIndex = (newStack) => {
-    console.log("findFirstOperatorIndex called");
     //find the first operator. the first operator will always have 2 operands before him.
     for (let i = 0; i < newStack.length; i++) {
       if (/[+\-*/]/.test(newStack[i]) && newStack[i].length == 1) {
@@ -219,13 +282,32 @@ function App() {
     } catch (err) {
       console.log(err);
     }
-    lastInputType.current = "number";
+    //??
+    if (expression[expression.length - 1] != ")")
+      lastInputType.current = "number";
   };
   ///////////////////////////////////////////////////////////////////////////////////////////////////////
   return (
     <ColumnContainer>
-      <Result result={result} />
-      <Expression expression={expression} />
+      <ColumnContainer
+        sx={{
+          backgroundColor: "#e8e6e3",
+          width: "410px",
+          borderRadius: "5px",
+          border: "white 2px solid",
+          marginBottom: "10px",
+          height: "100px",
+          alignItems: "flex-start",
+        }}
+      >
+        <Expression
+          expression={expression}
+          handleNumberClick={handleNumberClick}
+          handleOperatorClick={handleOperatorClick}
+          setExpression={setExpression}
+        />
+        <Result result={result} />
+      </ColumnContainer>
 
       <RowContainer>
         <GridContainr>
@@ -237,6 +319,9 @@ function App() {
                 value={el}
                 onClick={(event) => {
                   handleNumberClick(event.target.value);
+                  if (expression[expression.length - 1] == ")")
+                    setExpression([...expression, "*" + event.target.value]);
+                  else setExpression([...expression, event.target.value]);
                 }}
               >
                 {el}
@@ -259,6 +344,15 @@ function App() {
           >
             {")"}
           </button>
+          <button
+            className={`item-.`}
+            value={"."}
+            onClick={() => {
+              handleDotClick();
+            }}
+          >
+            .
+          </button>
           {operators.map((el, index) => {
             return (
               <button
@@ -266,7 +360,21 @@ function App() {
                 className={`item-${el}`}
                 value={el}
                 onClick={(event) => {
-                  handleOperatorClick(event.target.value);
+                  //prevent sequent of operators
+                  if (
+                    (lastInputType.current == "operator" && expression[expression.length - 1] != ")" && event.target.value != "-") ||
+                    (expression[expression.length - 1] == "-" &&
+                      expression[expression.length - 2] == "-")
+                  ) {
+                    console.log("returning")
+                    return;
+                  }
+                  else{
+                    handleOperatorClick(event.target.value);
+                    setExpression([...expression, event.target.value]);
+
+                  }
+                              
                 }}
               >
                 {el}
@@ -280,7 +388,7 @@ function App() {
           <button
             className={`item-C`}
             onClick={() => {
-              setExpression("");
+              setExpression([]);
               setResult(0);
               setStack([]);
               setQueues([]);
@@ -290,7 +398,10 @@ function App() {
           </button>
           <button
             className={`item-DEL`}
-            onClick={() => setExpression(expression.slice(0, -1))}
+            onClick={() => {
+              setIsDELClicked(true);
+              handleDELClick();
+            }}
           >
             DEL
           </button>
