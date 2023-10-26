@@ -53,16 +53,16 @@ function App() {
 
   const handleDotClick = () => {
     //last input is closing parentheses
-    if(expression[expression.length - 1] == ")"){
+    if (expression[expression.length - 1] == ")") {
       const updatedArrs = getReorderStackAndQueue("*");
       setQueues([...updatedArrs.syncQueue]);
       setStack([...updatedArrs.syncStack, "0."]);
-      setExpression([...expression, "*","0","."]);
+      setExpression([...expression, "*", "0", "."]);
     }
     //last input is operator or none
     else if (stack.length == 0 || lastInputType.current == "operator") {
       setStack([...stack, "0."]);
-      setExpression([...expression, "0","."]);
+      setExpression([...expression, "0", "."]);
       //last input is a number - concate last number with the dot
     } else {
       let stackCopy = [...stack];
@@ -96,11 +96,10 @@ function App() {
     setExpression([strResult]);
   };
 
-
   const handleOpenPar = async () => {
     console.log("handleOpenPar called");
     const digitPattern = /^\d$/;
-    //if the last charecter is number or closing parenthesws add * before
+    //if the last charecter is a number or closing parenthesws add * before
     if (
       digitPattern.test(expression[expression.length - 1]) ||
       expression[expression.length - 1] == ")"
@@ -163,7 +162,7 @@ function App() {
     setExpression([...expression, ")"]);
     lastInputType.current = "operator";
   };
-  
+
   const handleNumberClick = (operand) => {
     console.log(
       "handleNumberClick called last user input is : " + lastInputType.current
@@ -192,9 +191,8 @@ function App() {
     console.log("3");
     lastInputType.current = "number";
   };
-  ////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   const handleOperatorClick = (newOperator) => {
-    
     console.log("handleOperatorClick called");
     if (stack.length == 0 && newOperator != "-") {
       alert("expression cannot start with an operation");
@@ -226,7 +224,6 @@ function App() {
     lastInputType.current = "operator";
   };
 
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////
   const applyInnerCalc = (operator, operand1, operand2) => {
     switch (operator) {
       case "+":
@@ -241,7 +238,7 @@ function App() {
         throw new Error("Invalid operator");
     }
   };
-  /////////////////////////////////////////////////////////////////////////////////////////////////
+
   const findFirstOperatorIndex = (newStack) => {
     //find the first operator. the first operator will always have 2 operands before him.
     for (let i = 0; i < newStack.length; i++) {
@@ -250,7 +247,7 @@ function App() {
       }
     }
   };
-  /////////////////////////////////////////////////////////////////////////////////////////////////////
+
   const calcResult = () => {
     console.log("calcResult called");
     try {
@@ -286,7 +283,7 @@ function App() {
     if (expression[expression.length - 1] != ")")
       lastInputType.current = "number";
   };
-  ///////////////////////////////////////////////////////////////////////////////////////////////////////
+
   return (
     <ColumnContainer>
       <ColumnContainer
@@ -362,19 +359,18 @@ function App() {
                 onClick={(event) => {
                   //prevent sequent of operators
                   if (
-                    (lastInputType.current == "operator" && expression[expression.length - 1] != ")" && event.target.value != "-") ||
+                    (lastInputType.current == "operator" &&
+                      expression[expression.length - 1] != ")" &&
+                      event.target.value != "-") ||
                     (expression[expression.length - 1] == "-" &&
                       expression[expression.length - 2] == "-")
                   ) {
-                    console.log("returning")
+                    console.log("returning");
                     return;
-                  }
-                  else{
+                  } else {
                     handleOperatorClick(event.target.value);
                     setExpression([...expression, event.target.value]);
-
                   }
-                              
                 }}
               >
                 {el}
