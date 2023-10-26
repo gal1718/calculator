@@ -321,6 +321,11 @@ function App() {
           handleNumberClick={handleNumberClick}
           handleOperatorClick={handleOperatorClick}
           setExpression={setExpression}
+          handleOpenPar = {handleOpenPar}
+          handleClosePar = {handleClosePar}
+          handleDotClick = {handleDotClick}
+          handleDELClick={handleDELClick}
+          handleEqualClick = {handleEqualClick}
         />
         <Result result={result} />
       </ColumnContainer>
