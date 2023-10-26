@@ -42,14 +42,24 @@ function App() {
   useEffect(() => {
     if (
       stack.length >= 2 &&
-      ((lastInputType.current == "number" &&
-        expression[expression.length - 1] != "-") ||
-        expression[expression.length - 1] == ")")
+      (lastInputType.current == "number" ||
+        expression[expression.length - 1] == ")") &&
+      parenthesesValidationCheck()
     ) {
       console.log("calcres useaffect called");
       calcResult();
     }
   }, [stack]);
+
+  //parentheses are vaild only if they arent exist on queue
+  const parenthesesValidationCheck = () => {
+    if (queues.includes(")") || queues.includes("(")) {
+      console.log("parenthesesValidationCheck returning false");
+      return false;
+    }
+    console.log("parenthesesValidationCheck returning true");
+    return true;
+  };
 
   const handleDotClick = () => {
     //last input is closing parentheses
@@ -147,6 +157,15 @@ function App() {
     //check if queses include open parentesis//need to check the number of open and close par
     if (!queues.includes("(") || queues.length == 0) {
       alert("closing parentheses cannot comes without open Parenthesis");
+      return;
+    }
+    //if parentheses content is null put 0 inside and return - put 0 in stack , remove open parentheses and return
+    if (expression[expression.length - 1] == "(") {
+      setExpression([...expression, "0", ")"]);
+      setStack([...stack, "0"]);
+      let copyQueues = [...queues];
+      setQueues([...copyQueues.slice(0, -1)]);
+      lastInputType.current = "operator";
       return;
     }
     //move elements, between parentheses,from queue to stack
