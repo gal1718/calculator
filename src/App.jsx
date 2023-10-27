@@ -197,7 +197,6 @@ function App() {
       setStack([...stackCopy, lastElement + operand]);
       //last user input is operator - insert operand to stack as a new element
     } else {
-      console.log("2");
       //add multipication in case that last input is closing parentheses
       if (expression[expression.length - 1] == ")") {
         setQueues([...queues, "*"]);
@@ -207,7 +206,6 @@ function App() {
       }
       setStack([...stack, operand]);
     }
-    console.log("3");
     lastInputType.current = "number";
   };
 
@@ -389,7 +387,6 @@ function App() {
                     (expression[expression.length - 1] == "-" &&
                       expression[expression.length - 2] == "-")
                   ) {
-                    console.log("returning");
                     return;
                   } else {
                     handleOperatorClick(event.target.value);
