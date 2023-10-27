@@ -23,9 +23,8 @@ const Expression = ({
     if (e.key === "Enter") {
       handleEqualClick();
       console.log("enter");
-    } else if (/[\d.]/.test(e.key)) {
-      // Handle numeric keys and the decimal point
-      //onNumberClick(e.key);
+    } else if (/[\d]/.test(e.key)) {
+      // Handle numeric keys 
       handleNumberClick(e.key);
       handleExpression(e.key);
     } else if (/[+\-*/]/.test(e.key)) {
