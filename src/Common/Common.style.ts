@@ -11,8 +11,8 @@ const ColumnContainer = styled("div")({
 
 const RowContainer = styled("div")({
   display: "flex",
-  flexDirection: "flex-reverse",
-  alignItems: "end",
+  flexDirection: "row-reverse",
+  alignItems: "flex-end",
   flexWrap: "wrap",
   gap: "1em",
   marginRight: "25%",

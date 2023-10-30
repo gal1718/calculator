@@ -6,6 +6,21 @@ const Div = styled("div")(({ theme }) => ({
   padding: theme.spacing(1),
 }));
 
+type Props = {
+  expression: string[],
+  handleNumberClick: (operand: string)=> void,
+  handleOperatorClick: (operator: string)=> void,
+  setExpression:(char: string[]) => void,
+  handleOpenPar: () => void,
+  handleClosePar: () => void,
+  handleDotClick: () => void,
+  handleDELClick: () => void,
+  handleEqualClick: () => void,
+  
+}
+
+const buttons = {}
+
 const Expression = ({
   expression,
   handleNumberClick,
@@ -16,39 +31,39 @@ const Expression = ({
   handleDotClick,
   handleDELClick,
   handleEqualClick,
-}) => {
+}: Props) => {
   //console.log("expressionm " + JSON.stringify(expression));
-  const handleKeyDown = (e) => {
-    console.log("e.key is" + e.key);
-    if (e.key === "Enter") {
-      handleEqualClick();
-      console.log("enter");
-    } else if (/[\d]/.test(e.key)) {
+  const handleKeyDown = (key: string,code: string) =>{
+  if (key === "Enter") {
+    handleEqualClick();
+    console.log("enter");
+  
+    } else if (/[\d]/.test(key)) {
       // Handle numeric keys 
-      handleNumberClick(e.key);
-      handleExpression(e.key);
-    } else if (/[+\-*/]/.test(e.key)) {
+      handleNumberClick(key);
+      handleExpression(key);
+    } else if (/[+\-*/]/.test(key)) {
       // Handle operators and parentheses
       //onOperatorClick(e.key);
-      handleOperatorClick(e.key);
-      handleExpression(e.key);
-    } else if (e.key === "(") {
+      handleOperatorClick(key);
+      handleExpression(key);
+    } else if (key === "(") {
       handleOpenPar();
-    } else if (e.key === ")") {
+    } else if (key === ")") {
       handleClosePar();
-    } else if (e.key === ".") {
+    } else if (key === ".") {
       handleDotClick();
     } else if (
-      e.key === "Delete" ||
-      e.code === "Delete" ||
-      e.key == "Backspace"
+      key === "Delete" ||
+      code === "Delete" ||
+      key == "Backspace"
     ) {
       console.log("deleter called");
       handleDELClick();
     }
   };
 
-  const handleExpression = (char) => {
+  const handleExpression = (char: string) => {
     console.log("handleExpression " + char);
 
     setExpression([...expression, char]);
@@ -65,7 +80,7 @@ const Expression = ({
         }}
         value={expression?.join("")}
         onKeyDown={(event) => {
-          handleKeyDown(event);
+          handleKeyDown(event.key, event.code);
         }}
       ></input>
     </div>
